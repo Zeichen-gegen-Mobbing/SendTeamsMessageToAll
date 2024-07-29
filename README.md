@@ -7,3 +7,5 @@ The files are also available in this repository in the folder "scripts".
 There are two important files:
 - Send-TeamsMessage.ps1 - PowerShell Script
 - Template.txt - Template for messages in HTML
+
+Coded by Thimo alias WhiteTomX
