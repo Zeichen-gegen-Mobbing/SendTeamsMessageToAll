@@ -1,0 +1,15 @@
+Hallo {{GivenName}},
+<br>
+dies ist die Vorlage für Nachrichten, die an viiieele Menschen gleichzeitig geschickt werden sollen. Sinnvoll ist es, das zu Beginn mit einzelnen Personen zutesten.
+<br>
+Zeilenumbrüche in der Vorlage werden ignoriert, daher muss für jede neue Zeile ein <a href="https://www.w3schools.com/TAGS/tag_br.asp">br in spitzen Klammern</a> gesetzt werden.
+<br>
+Links können mithilfe von <a href="https://www.w3schools.com/html/html_links.asp">HTML Links</a> eingebunden werden.
+<br>
+Um Emojis zu verschicken, benötigst du die eigentlichen Smileys. Geh dafür auf die <a href="https://emojipedia.org/microsoft-teams">Emojipedia für Teams</a> und such nach dem gewünschten Emoji.
+<br>
+In dem Text ist ein Link zu dem dahinter liegendem klassischen Emoji. Folge dem Link und kopiere das eigentliche Emoji und füge es dem alt tag hinzu. 
+<br>
+Für <emoji alt="😶‍🌫️"></emoji> (<a href="https://emojipedia.org/microsoft-teams/15.0/face-in-clouds">faceinclouds</a>) führt der <a href="https://emojipedia.org/face-in-clouds">Link</a> zum kopieren von denen hier: 😶‍🌫️.
+<br>
+<emoji alt="🤣"></emoji>
