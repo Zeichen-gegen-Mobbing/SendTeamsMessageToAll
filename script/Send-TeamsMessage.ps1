@@ -31,12 +31,12 @@ param (
     [System.IO.FileInfo]
     $MessagePath,
 
-    # The Mail address of the user to send message to.
+    # The Mail address of the user in current Tenant to send message to.
     [Parameter(ParameterSetName = "Specific", Mandatory)]
     [String[]]
     $UserEmail,
 
-    # Send message to all users.
+    # Send message to all members (no guests).
     [Parameter(ParameterSetName = "All", Mandatory)]
     [switch]$All
 )
@@ -49,20 +49,22 @@ $ErrorActionPreference = "Stop"
 #endregion
 
 #region Connect
-Connect-MgGraph -Scopes "User.ReadBasic.All", "Chat.Create", "ChatMessage.Send"
+Connect-MgGraph -Scopes "User.Read.All", "Chat.Create", "ChatMessage.Send"
 #endregion
 
 #region Get users
-$users = Get-MgUser -All
+$users = Get-MgUser -All -Property id, givenName, mail, userType 
 $context = Get-MgContext
 
 if ($PSCmdlet.ParameterSetName -eq "Specific") {
     $users = $users | Where-Object { $UserEmail -contains $_.Mail }
 }
+elseif ($PSCmdlet.ParameterSetName -eq "All") {
+    $users = $users | Where-Object { $_.UserType -ne "Guest" }
+}
 #endregion
 
 #region send message
-
 $message = Get-Content -LiteralPath $MessagePath -Raw
 
 foreach ($user in $users) {
@@ -85,7 +87,6 @@ foreach ($user in $users) {
             }
         )
     }
-    
     $chat = New-MgChat -BodyParameter $params
 
     $userMessage = $Message -replace "{{GivenName}}", $user.GivenName
