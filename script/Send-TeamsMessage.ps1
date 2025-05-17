@@ -22,6 +22,13 @@ Message sent to name1@domain.com - 171234108555
 Message sent to name2@domain.com - 171234101238
 Message sent to name3@domain.com - 171231234558
 Message sent to name4@domain.com - 121443105558
+.EXAMPLE
+PS C:\> .\Send-TeamsMessage.ps1 -All -ExcludeDisplayName "Ernie Sesame","Karla Kolumna"
+cmdlet Send-TeamsMessage.ps1 at command pipeline position 1
+Supply values for the following parameters:
+MessagePath: Send-TeamsMessage.txt
+Message sent to name1@domain.com - 171234108555
+Message sent to name4@domain.com - 121443105558
 #>
 
 [CmdletBinding(DefaultParameterSetName = "Specific")]
@@ -40,7 +47,12 @@ param (
 
     # Send message to all members (no guests).
     [Parameter(ParameterSetName = "All", Mandatory)]
-    [switch]$All
+    [switch]$All,
+
+    # Exclude members by DisplayName.
+    [Parameter(ParameterSetName = "All")]
+    [String[]]
+    $ExcludeDisplayName
 )
 
 #requires -Version 7
@@ -55,14 +67,14 @@ Connect-MgGraph -Scopes "User.Read.All", "Chat.Create", "ChatMessage.Send"
 #endregion
 
 #region Get users
-$users = Get-MgUser -All -Property id, givenName, mail, userType 
+$users = Get-MgUser -All -Property id, givenName, mail, userType, displayName
 $context = Get-MgContext
 
 if ($PSCmdlet.ParameterSetName -eq "Specific") {
     $users = $users | Where-Object { $UserEmail -contains $_.Mail }
 }
 elseif ($PSCmdlet.ParameterSetName -eq "All") {
-    $users = $users | Where-Object { $_.UserType -ne "Guest" }
+    $users = $users | Where-Object { $_.UserType -ne "Guest" -and $_.DisplayName -notin $ExcludeDisplayName }
 }
 #endregion
 
