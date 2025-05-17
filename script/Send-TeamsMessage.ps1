@@ -27,9 +27,11 @@ Message sent to name4@domain.com - 121443105558
 [CmdletBinding(DefaultParameterSetName = "Specific")]
 param (
     # The path to the file containing the message to send. {{GivenName}} will be replaced with the user's first name. Use [Linktext](https://link.de) to create links.
-    [Parameter(Mandatory)]
     [System.IO.FileInfo]
-    $MessagePath,
+    [ValidateScript({
+            Test-Path $_ -PathType Leaf
+        })]
+    $MessagePath = (Join-Path -Path $PSScriptRoot -ChildPath "MessageTemplate.txt"),
 
     # The Mail address of the user in current Tenant to send message to.
     [Parameter(ParameterSetName = "Specific", Mandatory)]
