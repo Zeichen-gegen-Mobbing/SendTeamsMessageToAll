@@ -106,7 +106,7 @@ if ($PSCmdlet.ParameterSetName -eq "Group") {
     $users = Get-MgGroupMember -GroupId $groupId -All -Property $properties
     $additionalProperties = @("id")
     $additionalProperties += $users[0].AdditionalProperties.Keys | ForEach-Object { return @{"Name" = $_.ToString(); Expression = [scriptblock]::Create("`$_.AdditionalProperties['$_']") } }
-    $users = $users | Select-Object -Property $additionalProperties
+    $users = $users | Select-Object -Property $additionalProperties | Where-Object { $_.Mail -ne $context.Account }
 }
 else {
     $users = Get-MgUser -All -Property $properties
@@ -115,7 +115,7 @@ else {
         $users = $users | Where-Object { $UserEmail -contains $_.Mail }
     }
     elseif ($PSCmdlet.ParameterSetName -eq "All") {
-        $users = $users | Where-Object { $_.UserType -ne "Guest" }
+        $users = $users | Where-Object { $_.UserType -ne "Guest" -and $_.Mail -ne $context.Account }
     }
 }
 
