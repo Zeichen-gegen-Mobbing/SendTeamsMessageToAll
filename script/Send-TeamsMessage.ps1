@@ -68,6 +68,9 @@ param (
 
 #region Global Variables
 $ErrorActionPreference = "Stop"
+$PSDefaultParameterValues[ "*Mg*:ErrorAction" ] = $ErrorActionPreference
+$PSDefaultParameterValues[ "*Mg*:Verbose" ] = $VerbosePreference
+$PSDefaultParameterValues[ "*Mg*:Debug" ] = $DebugPreference
 #endregion
 
 #region Connect
@@ -150,7 +153,7 @@ foreach ($user in $users) {
             contentType = "html"
         }
     }
-    # $chatMessage = New-MgChatMessage -ChatId $chat.Id -BodyParameter $body
+    $chatMessage = New-MgChatMessage -ChatId $chat.Id -BodyParameter $body
 
     Write-Information -InformationAction Continue -MessageData "Message sent to $($user.Mail) - $($chatMessage.Id)"
 }
