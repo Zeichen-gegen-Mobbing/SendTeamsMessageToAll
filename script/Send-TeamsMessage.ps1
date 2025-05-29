@@ -147,8 +147,15 @@ foreach ($user in $users) {
             }
         )
     }
-    $chat = New-MgChat -BodyParameter $params
-
+    try {
+        $chat = New-MgChat -BodyParameter $params
+    }
+    catch {
+        # The problem is most likely, that we hit throttling
+        Start-Sleep -Seconds 1
+        $chat = New-MgChat -BodyParameter $params
+    }
+    
     $userMessage = $Message -replace "{{GivenName}}", $user.GivenName
     $body = @{
         body = @{
@@ -156,7 +163,15 @@ foreach ($user in $users) {
             contentType = "html"
         }
     }
-    $chatMessage = New-MgChatMessage -ChatId $chat.Id -BodyParameter $body
 
+    try {
+        $chatMessage = New-MgChatMessage -ChatId $chat.Id -BodyParameter $body
+    }
+    catch {
+        # The problem is most likely, that we hit throttling
+        Start-Sleep -Seconds 1
+        $chatMessage = New-MgChatMessage -ChatId $chat.Id -BodyParameter $body
+    }
+    
     Write-Information -InformationAction Continue -MessageData "Message sent to $($user.Mail) - $($chatMessage.Id)"
 }
