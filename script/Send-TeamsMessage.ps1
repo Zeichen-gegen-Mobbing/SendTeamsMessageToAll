@@ -89,6 +89,7 @@ elseif ($PSBoundParameters.ContainsKey("ExcludeDisplayName")) {
 
 $scopes = @("Chat.Create", "ChatMessage.Send", $additionalScope)
 Connect-MgGraph -Scopes $scopes
+$context = Get-MgContext
 #endregion
 
 #region Get users
@@ -106,7 +107,6 @@ if ($PSCmdlet.ParameterSetName -eq "Group") {
 }
 else {
     $users = Get-MgUser -All -Property $properties
-    $context = Get-MgContext
 
     if ($PSCmdlet.ParameterSetName -eq "Specific") {
         $users = $users | Where-Object { $UserEmail -contains $_.Mail }
