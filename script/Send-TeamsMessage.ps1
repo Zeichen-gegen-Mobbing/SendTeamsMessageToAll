@@ -9,26 +9,22 @@
 PS C:\> .\Send-TeamsMessage.ps1
 cmdlet Send-TeamsMessage.ps1 at command pipeline position 1
 Supply values for the following parameters:
-MessagePath: Send-TeamsMessage.txt
-UserEmail[0]: name@domain.com
+UserEmail[0]: user1@example.com
 UserEmail[1]:
-Message sent to name@domain.com - 1712341085558
+Message sent to user1@example.com - 1712341085558
+.EXAMPLE
+PS C:\> .\Send-TeamsMessage.ps1 -UserEmail "user1@example.com","user2@example.com"
+Message sent to user1@example.com - 1712341085558
+Message sent to user2@example.com - 1712321055558
 .EXAMPLE
 PS C:\> .\Send-TeamsMessage.ps1 -All
-cmdlet Send-TeamsMessage.ps1 at command pipeline position 1
-Supply values for the following parameters:
-MessagePath: Send-TeamsMessage.txt
-Message sent to name1@domain.com - 171234108555
-Message sent to name2@domain.com - 171234101238
-Message sent to name3@domain.com - 171231234558
-Message sent to name4@domain.com - 121443105558
+Message sent to user1@example.com - 1712341085558
+Message sent to user2@example.com - 1712321055558
+Message sent to user3@example.com - 121443105558
 .EXAMPLE
 PS C:\> .\Send-TeamsMessage.ps1 -All -ExcludeDisplayName "Ernie Sesame","Karla Kolumna"
-cmdlet Send-TeamsMessage.ps1 at command pipeline position 1
-Supply values for the following parameters:
-MessagePath: Send-TeamsMessage.txt
-Message sent to name1@domain.com - 171234108555
-Message sent to name4@domain.com - 121443105558
+Message sent to user1@example.com - 1712341085558
+Message sent to user2@example.com - 1712321055558
 #>
 
 [CmdletBinding(DefaultParameterSetName = "Specific")]
@@ -41,7 +37,7 @@ param (
     $MessagePath = (Join-Path -Path $PSScriptRoot -ChildPath "MessageTemplate.txt"),
 
     # The Mail address of the user in current Tenant to send message to.
-    [Parameter(ParameterSetName = "Specific", Mandatory)]
+    [Parameter(ParameterSetName = "Specific", Mandatory, Position = 0)]
     [String[]]
     $UserEmail,
 
