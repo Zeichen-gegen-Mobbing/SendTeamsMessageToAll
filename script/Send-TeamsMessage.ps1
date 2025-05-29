@@ -62,7 +62,7 @@ $ErrorActionPreference = "Stop"
 $scopes = @("Chat.Create", "ChatMessage.Send", "")
 if ($PSBoundParameters.ContainsKey("ExcludeDisplayName")) {
     $scopes[2] = "User.Read.All"
-    Write-Warning -MessageData "You are using the ExcludeDisplayName parameter. This requires the User.Read.All scope, which is an Admin scope. Make sure you have the necessary permissions to run this script."
+    Write-Information -InformationAction Continue -MessageData "You are using the ExcludeDisplayName parameter. This requires the User.Read.All scope, which is an Admin scope. Make sure you have the necessary permissions to run this script."
     Write-Information -InformationAction Continue -MessageData "If you don't have the User.Read.All scope, you can remove the ExcludeDisplayName parameter to use the User.ReadBasic.All scope instead."
 }
 else {
