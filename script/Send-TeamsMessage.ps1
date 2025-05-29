@@ -104,6 +104,9 @@ if ($PSCmdlet.ParameterSetName -eq "Group") {
         throw "Group '$Group' not found. Please check the group name."
     }
     $users = Get-MgGroupMember -GroupId $groupId -All -Property $properties
+    $additionalProperties = @("id")
+    $additionalProperties += $users[0].AdditionalProperties.Keys | ForEach-Object { return @{"Name" = $_.ToString(); Expression = [scriptblock]::Create("`$_.AdditionalProperties['$_']") } }
+    $users = $users | Select-Object -Property $additionalProperties
 }
 else {
     $users = Get-MgUser -All -Property $properties
