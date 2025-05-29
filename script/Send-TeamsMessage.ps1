@@ -73,7 +73,12 @@ Connect-MgGraph -Scopes $scopes
 #endregion
 
 #region Get users
-$users = Get-MgUser -All -Property id, givenName, mail, userType, displayName
+$properties = @("id", "givenName", "mail", "userType")
+if ($PSBoundParameters.ContainsKey("ExcludeDisplayName")) {
+    $properties += "displayName"
+}
+
+$users = Get-MgUser -All -Property $properties
 $context = Get-MgContext
 
 if ($PSCmdlet.ParameterSetName -eq "Specific") {
