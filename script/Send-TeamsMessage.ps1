@@ -78,7 +78,7 @@ $PSDefaultParameterValues[ "*Mg*:Debug" ] = $DebugPreference
 $additionalScope = "User.ReadBasic.All"
 if ($PSCmdlet.ParameterSetName -eq "Group") {
     $additionalScope = "GroupMember.Read.All"
-    Write-Information -InformationAction Continue -MessageData "You are using the Group parameter. This requires the Group.Read.All scope, which is an Admin scope. Make sure you have the necessary permissions to run this script."
+    Write-Information -InformationAction Continue -MessageData "You are using the Group parameter. This requires the GroupMember.Read.All scope, which is an Admin scope. Make sure you have the necessary permissions to run this script."
     Write-Information -InformationAction Continue -MessageData "If you don't have the Group.Read.All scope, you can remove the Group parameter to use the User.ReadBasic.All scope instead."
 }
 elseif ($PSBoundParameters.ContainsKey("ExcludeDisplayName")) {
