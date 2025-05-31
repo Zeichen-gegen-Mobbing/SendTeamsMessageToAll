@@ -25,7 +25,7 @@ When you want to send mail to all people type `-All` afterwards. You can exclude
 
 You need PowerShell 7. To install it run `winget install Microsoft.PowerShell`.
 
-Afterwards open Powershell (with the black logo) and run `Install-Module Microsoft.Graph.Authentication,Microsoft.Graph.Users,Microsoft.Graph.Teams -Scope CurrentUser` to install required modules
+Afterwards open Powershell (with the black logo) and run `Install-Module Microsoft.Graph.Authentication,Microsoft.Graph.Users,Microsoft.Graph.Teams,Microsoft.Graph.Groups -Scope CurrentUser` to install required modules
 
 ### Troubleshooting
 
