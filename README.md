@@ -17,6 +17,7 @@ Secondly right click on the `script/Send-Teams-Message` file and select copy as 
 Lastly open Powershell (with the black logo). Type a `.` and paste the copied path afterwards.
 
 If you want to send Messages to specific people press enter afterwards and enter mail address after mail address.
+You can also add multiple mail addresses (like from excel) `"user1@example.com","user2@example.com"`.
 
 When you want to send mail to all people type `-All` afterwards. You can exclude specific people with `-ExcludeDisplayName "Karla Kolumna"`.
 

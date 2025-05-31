@@ -9,26 +9,26 @@
 PS C:\> .\Send-TeamsMessage.ps1
 cmdlet Send-TeamsMessage.ps1 at command pipeline position 1
 Supply values for the following parameters:
-MessagePath: Send-TeamsMessage.txt
-UserEmail[0]: name@domain.com
+UserEmail[0]: user1@example.com
 UserEmail[1]:
-Message sent to name@domain.com - 1712341085558
+Message sent to user1@example.com - 1712341085558
+.EXAMPLE
+PS C:\> .\Send-TeamsMessage.ps1 -UserEmail "user1@example.com","user2@example.com"
+Message sent to user1@example.com - 1712341085558
+Message sent to user2@example.com - 1712321055558
+.EXAMPLE
+PS C:\> .\Send-TeamsMessage.ps1 -Group "My Team"
+Message sent to user1@example.com - 1712341085558
+Message sent to user2@example.com - 1712321055558
 .EXAMPLE
 PS C:\> .\Send-TeamsMessage.ps1 -All
-cmdlet Send-TeamsMessage.ps1 at command pipeline position 1
-Supply values for the following parameters:
-MessagePath: Send-TeamsMessage.txt
-Message sent to name1@domain.com - 171234108555
-Message sent to name2@domain.com - 171234101238
-Message sent to name3@domain.com - 171231234558
-Message sent to name4@domain.com - 121443105558
+Message sent to user1@example.com - 1712341085558
+Message sent to user2@example.com - 1712321055558
+Message sent to user3@example.com - 121443105558
 .EXAMPLE
 PS C:\> .\Send-TeamsMessage.ps1 -All -ExcludeDisplayName "Ernie Sesame","Karla Kolumna"
-cmdlet Send-TeamsMessage.ps1 at command pipeline position 1
-Supply values for the following parameters:
-MessagePath: Send-TeamsMessage.txt
-Message sent to name1@domain.com - 171234108555
-Message sent to name4@domain.com - 121443105558
+Message sent to user1@example.com - 1712341085558
+Message sent to user2@example.com - 1712321055558
 #>
 
 [CmdletBinding(DefaultParameterSetName = "Specific")]
@@ -41,7 +41,7 @@ param (
     $MessagePath = (Join-Path -Path $PSScriptRoot -ChildPath "MessageTemplate.txt"),
 
     # The Mail address of the user in current Tenant to send message to.
-    [Parameter(ParameterSetName = "Specific", Mandatory)]
+    [Parameter(ParameterSetName = "Specific", Mandatory, Position = 0)]
     [String[]]
     $UserEmail,
 
@@ -49,32 +49,78 @@ param (
     [Parameter(ParameterSetName = "All", Mandatory)]
     [switch]$All,
 
-    # Exclude members by DisplayName.
+    # Send message to members of a specific Team. When you use this, you must have a Admin role.
+    [Parameter(ParameterSetName = "Group", Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [Alias("Team")]
+    [string]$Group,
+
+
+    # Exclude members by DisplayName. When you use this, you must have a Admin role. 
     [Parameter(ParameterSetName = "All")]
+    [Parameter(ParameterSetName = "Group")]
     [String[]]
     $ExcludeDisplayName
 )
 
 #requires -Version 7
-#requires -Modules Microsoft.Graph.Authentication,Microsoft.Graph.Users,Microsoft.Graph.Teams
+#requires -Modules Microsoft.Graph.Authentication,Microsoft.Graph.Users,Microsoft.Graph.Groups,Microsoft.Graph.Teams
 
 #region Global Variables
 $ErrorActionPreference = "Stop"
+$PSDefaultParameterValues[ "*Mg*:ErrorAction" ] = $ErrorActionPreference
+$PSDefaultParameterValues[ "*Mg*:Verbose" ] = $VerbosePreference
+$PSDefaultParameterValues[ "*Mg*:Debug" ] = $DebugPreference
 #endregion
 
 #region Connect
-Connect-MgGraph -Scopes "User.Read.All", "Chat.Create", "ChatMessage.Send"
+
+$additionalScope = "User.ReadBasic.All"
+if ($PSCmdlet.ParameterSetName -eq "Group") {
+    $additionalScope = "GroupMember.Read.All"
+    Write-Information -InformationAction Continue -MessageData "You are using the Group parameter. This requires the GroupMember.Read.All scope, which is an Admin scope. Make sure you have the necessary permissions to run this script."
+    Write-Information -InformationAction Continue -MessageData "If you don't have the Group.Read.All scope, you can remove the Group parameter to use the User.ReadBasic.All scope instead."
+}
+elseif ($PSBoundParameters.ContainsKey("ExcludeDisplayName")) {
+    $additionalScope = "User.Read.All"
+    Write-Information -InformationAction Continue -MessageData "You are using the ExcludeDisplayName parameter. This requires the User.Read.All scope, which is an Admin scope. Make sure you have the necessary permissions to run this script."
+    Write-Information -InformationAction Continue -MessageData "If you don't have the User.Read.All scope, you can remove the ExcludeDisplayName parameter to use the User.ReadBasic.All scope instead."
+}
+
+$scopes = @("Chat.Create", "ChatMessage.Send", $additionalScope)
+Connect-MgGraph -Scopes $scopes
+$context = Get-MgContext
 #endregion
 
 #region Get users
-$users = Get-MgUser -All -Property id, givenName, mail, userType, displayName
-$context = Get-MgContext
-
-if ($PSCmdlet.ParameterSetName -eq "Specific") {
-    $users = $users | Where-Object { $UserEmail -contains $_.Mail }
+$properties = @("id", "givenName", "mail", "userType")
+if ($PSBoundParameters.ContainsKey("ExcludeDisplayName")) {
+    $properties += "displayName"
 }
-elseif ($PSCmdlet.ParameterSetName -eq "All") {
-    $users = $users | Where-Object { $_.UserType -ne "Guest" -and $_.DisplayName -notin $ExcludeDisplayName }
+
+if ($PSCmdlet.ParameterSetName -eq "Group") {
+    $groupId = (Get-MgGroup -Filter "displayName eq '$Group'" -Property "id").Id
+    if (-not $groupId) {
+        throw "Group '$Group' not found. Please check the group name."
+    }
+    $users = Get-MgGroupMember -GroupId $groupId -All -Property $properties
+    $additionalProperties = @("id")
+    $additionalProperties += $users[0].AdditionalProperties.Keys | ForEach-Object { return @{"Name" = $_.ToString(); Expression = [scriptblock]::Create("`$_.AdditionalProperties['$_']") } }
+    $users = $users | Select-Object -Property $additionalProperties | Where-Object { $_.Mail -ne $context.Account }
+}
+else {
+    $users = Get-MgUser -All -Property $properties
+
+    if ($PSCmdlet.ParameterSetName -eq "Specific") {
+        $users = $users | Where-Object { $UserEmail -contains $_.Mail }
+    }
+    elseif ($PSCmdlet.ParameterSetName -eq "All") {
+        $users = $users | Where-Object { $_.UserType -ne "Guest" -and $_.Mail -ne $context.Account }
+    }
+}
+
+if ($PSBoundParameters.ContainsKey("ExcludeDisplayName")) {
+    $users = $users | Where-Object { $ExcludeDisplayName -notcontains $_.DisplayName }
 }
 #endregion
 
@@ -101,8 +147,15 @@ foreach ($user in $users) {
             }
         )
     }
-    $chat = New-MgChat -BodyParameter $params
-
+    try {
+        $chat = New-MgChat -BodyParameter $params
+    }
+    catch {
+        # The problem is most likely, that we hit throttling
+        Start-Sleep -Seconds 1
+        $chat = New-MgChat -BodyParameter $params
+    }
+    
     $userMessage = $Message -replace "{{GivenName}}", $user.GivenName
     $body = @{
         body = @{
@@ -110,7 +163,15 @@ foreach ($user in $users) {
             contentType = "html"
         }
     }
-    $chatMessage = New-MgChatMessage -ChatId $chat.Id -BodyParameter $body
 
+    try {
+        $chatMessage = New-MgChatMessage -ChatId $chat.Id -BodyParameter $body
+    }
+    catch {
+        # The problem is most likely, that we hit throttling
+        Start-Sleep -Seconds 1
+        $chatMessage = New-MgChatMessage -ChatId $chat.Id -BodyParameter $body
+    }
+    
     Write-Information -InformationAction Continue -MessageData "Message sent to $($user.Mail) - $($chatMessage.Id)"
 }
